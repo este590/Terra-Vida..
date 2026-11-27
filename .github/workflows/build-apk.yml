@@ -13,8 +13,9 @@ permissions:
 
 jobs:
   build:
-    name: Generar APK
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cirruslabs/android-sdk:35
 
     steps:
       - name: Descargar proyecto
@@ -26,33 +27,16 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Configurar Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Instalar Android 35
-        shell: bash
-        run: |
-          set -e
-          SDKMANAGER="${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager"
-          if [ ! -x "$SDKMANAGER" ]; then
-            SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)"
-          fi
-          test -x "$SDKMANAGER"
-          yes | "$SDKMANAGER" --licenses || true
-          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0"
-
-      - name: Configurar Gradle 8.9
+      - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
-      - name: Verificar archivos
+      - name: Verificar Android SDK
         run: |
-          test -f settings.gradle
-          test -f build.gradle
-          test -f app/build.gradle
-          test -f app/src/main/AndroidManifest.xml
-          test -f app/src/main/assets/index.html
+          java -version
+          echo "$ANDROID_HOME"
+          test -d "$ANDROID_HOME/platforms"
 
       - name: Compilar TerraVida
         run: gradle --no-daemon assembleDebug
